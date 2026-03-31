@@ -2,7 +2,8 @@
 
 Projeto desenvolvido com o propósito de avaliação por parte da empresa Super Terminais
 
-Os diagramas solicitados estão disponíveis em [docs/DIAGRAMS.md](docs/DIAGRAMS.md).
+> [!IMPORTANT]
+> Os diagramas solicitados estão disponíveis em [docs/DIAGRAMS.md](docs/DIAGRAMS.md).
 
 > [!IMPORTANT]
 > As respostas da Avaliação Técnica - Parte 2 está disponível em [docs/CHALLENGE.md](docs/CHALLENGE.md#parte-02) no final do arquivo.
@@ -51,7 +52,34 @@ Após a finalização do Deployment, as seguintes partes do sistema estarão dis
 
 ## Arquitetura
 
-> Em desenvolvimento..
+A arquitetura do sistema é orquestrada via **Docker Compose**. O **Nginx** atua como um proxy reverso, centralizando o acesso e distribuindo as requisições para os serviços apropriados de acordo com a URI pesquisada.
+
+```mermaid
+graph TD
+    User([Usuário]) --> Nginx[Nginx Reverse Proxy]
+
+    subgraph "Service Portal ST"
+        Nginx -- "/" --> Frontend[Frontend - Vue.js/Vite]
+        Nginx -- "/api" --> API[Backend API - Spring Boot]
+        Nginx -- "/pgadmin" --> PgAdmin[PgAdmin]
+
+        API --> DB[(PostgreSQL DB)]
+        PgAdmin --> DB
+    end
+
+    style Nginx fill:#009639,stroke:#333,stroke-width:2px
+    style Frontend fill:#42b883,stroke:#333,stroke-width:2px,color:#fff
+    style API fill:#6db33f,stroke:#333,stroke-width:2px,color:#fff
+    style DB fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+    style User fill:#fff,stroke:#333,stroke-width:2px
+```
+
+### Componentes:
+- **Nginx**: Ponto de entrada que gerencia o roteamento para portais e APIs.
+- **Frontend**: SPA desenvolvida em Vue.js com Vite e TypeScript.
+- **Backend**: API RESTful desenvolvida em Java com Spring Boot.
+- **PostgreSQL**: Banco de dados relacional para persistência de dados e arquivos (bytea).
+- **PgAdmin**: Interface web para administração do banco de dados.
 
 ## Decisões Técnicas
 
@@ -72,3 +100,6 @@ Após a finalização do Deployment, as seguintes partes do sistema estarão dis
 
 - Uso do algoritmo Argon2 ao invés do Bcrypt
     - O Bcrypt foi superado pelo Argon2
+
+- Uso do Nginx como Reverse Proxy -> Obsoleto
+    - Familiaridade com a ferramenta
