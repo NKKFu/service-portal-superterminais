@@ -29,12 +29,24 @@
         <span v-if="company.nickname" class="nickname">{{ company.nickname }}</span>
         
         <div class="flex-center-gap">
-          <div class="badge-status" :class="company.approvedBy ? 'approved' : 'pending'">
-            {{ company.approvedBy ? `Aprovado por: ${company.approvedBy}` : 'Aprovação Pendente' }}
+          <div v-if="company.approvedBy" class="badge-status approved">
+            {{ `Aprovado por: ${company.approvedBy}` }}
           </div>
-          <button v-if="!company.approvedBy" @click="handleApprove" class="btn btn-primary btn-sm" :disabled="approving">
-            {{ approving ? 'Aprovando...' : 'Aprovar' }}
-          </button>
+          <div v-else-if="isInternal && company.rejectedBy" class="badge-status rejected">
+            {{ `Rejeitado por: ${company.rejectedBy}` }}
+          </div>
+          <div v-else class="badge-status pending">
+            Aprovação Pendente
+          </div>
+
+          <template v-if="isInternal && !company.approvedBy && !company.rejectedBy">
+            <button @click="handleApprove" class="btn btn-primary btn-sm" :disabled="approving || rejecting">
+              {{ approving ? 'Aprovando...' : 'Aprovar' }}
+            </button>
+            <button @click="handleReject" class="btn btn-danger btn-sm" :disabled="approving || rejecting">
+              {{ rejecting ? 'Rejeitando...' : 'Rejeitar' }}
+            </button>
+          </template>
         </div>
       </div>
       
@@ -86,14 +98,17 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '../composables/useToast';
+import { useAuth } from '../composables/useAuth';
 import { formatCompanyType, formatProfileType, formatCurrency } from '../utils/formatters';
 
 const route = useRoute();
 const router = useRouter();
 const { error } = useToast();
+const { isInternal } = useAuth();
 
 const loading = ref(true);
 const approving = ref(false);
+const rejecting = ref(false);
 const company = ref<any>(null);
 
 const fetchCompanyDetails = async () => {
@@ -143,6 +158,27 @@ const handleApprove = async () => {
     error('Erro ao conectar ao servidor.');
   } finally {
     approving.value = false;
+  }
+};
+
+const handleReject = async () => {
+  rejecting.value = true;
+  try {
+    const response = await fetch(`/api/companies/${company.value.id}/reject`, {
+      method: 'POST',
+      headers: { 'Accept': '*/*' },
+      credentials: 'include'
+    });
+    if (response.ok) {
+      await fetchCompanyDetails();
+    } else {
+      error('Falha ao rejeitar a empresa.');
+    }
+  } catch (err) {
+    console.error(err);
+    error('Erro ao conectar ao servidor.');
+  } finally {
+    rejecting.value = false;
   }
 };
 
@@ -258,9 +294,23 @@ onMounted(() => {
   color: var(--color-success);
 }
 
+.badge-status.rejected {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+}
+
 .badge-status.pending {
   background-color: rgba(245, 158, 11, 0.1);
   color: #d97706;
+}
+
+.btn-danger {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .grid-details {

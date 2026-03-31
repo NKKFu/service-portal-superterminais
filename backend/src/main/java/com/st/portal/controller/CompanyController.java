@@ -208,6 +208,13 @@ public class CompanyController {
         }
 
         Company company = companyData.get();
+        if (company.getApprovedBy() != null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Esta empresa já foi aprovada."));
+        }
+        if (company.getRejectedBy() != null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Uma empresa rejeitada não pode ser aprovada."));
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl) {
             UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
@@ -216,6 +223,32 @@ public class CompanyController {
 
         companyRepository.save(company);
         return ResponseEntity.ok(new MessageResponse("Empresa aprovada com sucesso por " + company.getApprovedBy().getUsername()));
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('INTERNAL')")
+    public ResponseEntity<?> rejectCompany(@PathVariable Long id) {
+        Optional<Company> companyData = companyRepository.findById(id);
+        if (companyData.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Company company = companyData.get();
+        if (company.getApprovedBy() != null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Uma empresa aprovada não pode ser rejeitada."));
+        }
+        if (company.getRejectedBy() != null) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Esta empresa já foi rejeitada."));
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+            userRepository.findByUsername(userDetails.getUsername()).ifPresent(company::setRejectedBy);
+        }
+
+        companyRepository.save(company);
+        return ResponseEntity.ok(new MessageResponse("Empresa rejeitada com sucesso por " + company.getRejectedBy().getUsername()));
     }
 
     @GetMapping("/{id}/document")

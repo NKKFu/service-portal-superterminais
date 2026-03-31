@@ -40,6 +40,11 @@ public class Company {
     @JsonIgnore
     private User approvedBy;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rejected_by_user_id")
+    @JsonIgnore
+    private User rejectedBy;
+
     @OneToOne(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private CompanyDocument document;
@@ -74,6 +79,15 @@ public class Company {
     @JsonGetter("approvedBy")
     public String getApprovedByUsername() {
         return approvedBy != null ? approvedBy.getUsername() : null;
+    }
+
+    @JsonIgnore
+    public User getRejectedBy() { return rejectedBy; }
+    public void setRejectedBy(User rejectedBy) { this.rejectedBy = rejectedBy; }
+
+    @JsonGetter("rejectedBy")
+    public String getRejectedByUsername() {
+        return rejectedBy != null ? rejectedBy.getUsername() : null;
     }
 
     public CompanyDocument getDocument() { return document; }

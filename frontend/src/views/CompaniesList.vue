@@ -58,9 +58,9 @@
             </td>
             <td>
               <router-link :to="`/companies/${company.id}`" class="cell-link">
-                <span :class="['bagde', company.approvedBy ? 'badge-success' : 'badge-warning']">
-                  {{ company.approvedBy ? 'Aprovado' : 'Pendente' }}
-                </span>
+                <span v-if="company.approvedBy" class="bagde badge-success">Aprovado</span>
+                <span v-else-if="isInternal && company.rejectedBy" class="bagde badge-danger">Rejeitado</span>
+                <span v-else class="bagde badge-warning">Pendente</span>
               </router-link>
             </td>
           </tr>
@@ -74,10 +74,12 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from '../composables/useToast';
+import { useAuth } from '../composables/useAuth';
 import { formatCompanyType, formatProfileType } from '../utils/formatters';
 
 const router = useRouter();
 const { error } = useToast();
+const { isInternal } = useAuth();
 
 const companies = ref<any[]>([]);
 const loading = ref(true);
@@ -206,5 +208,10 @@ onMounted(() => {
 .badge-warning {
   background-color: rgba(245, 158, 11, 0.1);
   color: #d97706;
+}
+
+.badge-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
 }
 </style>

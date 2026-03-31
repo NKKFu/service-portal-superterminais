@@ -226,6 +226,11 @@ const fetchCompanyData = async () => {
       const allCompanies = await response.json();
       const company = allCompanies.find((c: any) => c.id == idValue);
       if (company) {
+        if (company.approvedBy || company.rejectedBy) {
+          error('Esta empresa não pode mais ser editada.');
+          router.push(isInternal.value ? `/companies/${idValue}` : '/');
+          return;
+        }
         form.value = {
           name: company.name || '',
           type: company.type || 'PESSOA_JURIDICA',

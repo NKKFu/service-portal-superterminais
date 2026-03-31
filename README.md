@@ -24,7 +24,7 @@ Ao fazer alguma modificação, use o seguinte comando para reiniciar:
 ```bash
 docker-compose run --rm api mvn clean compile
 docker-compose restart api
-docker-compose up -d
+docker-compose up --build -d
 ```
 
 Após a finalização do Deployment, as seguintes partes do sistema estarão disponíveis:
