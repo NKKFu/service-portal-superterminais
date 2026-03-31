@@ -14,41 +14,40 @@ Requisitos:
 - Docker
 - Docker Compose
 
-Para iniciar o projeto, use o seguinte comando:
+Para iniciar o projeto:
 ```bash
 docker-compose up -d
 ```
 
-Ao fazer alguma modificação, use o seguinte comando para reiniciar:
+### Links de Acesso:
+- **Frontend (Portal)**: [http://localhost](http://localhost)
+- **Backend (API + Swagger)**: [http://localhost/api/swagger-ui/index.html](http://localhost/api/swagger-ui/index.html)
+- **PgAdmin (Banco de Dados)**: [http://localhost/pgadmin](http://localhost/pgadmin)
+    - **Usuário**: `postgres@email.com`
+    - **Senha**: `postgres` (padrão)
+
+## Configuração Inicial
+
+Com o sistema recém-instalado ele não possui usuários cadastrados. Para criar o **primeiro usuário interno (administrador)** e conseguir acessar o portal, siga o procedimento abaixo:
+
+Execute o seguinte comando `curl` para registrar o primeiro usuário administrador utilizando o segredo de segurança:
 
 ```bash
-docker-compose run --rm api mvn clean compile
-docker-compose restart api
-docker-compose up --build -d
+curl -X 'POST' \
+  'http://localhost/api/auth/register' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer secret-allow-first-user' \
+  -d '{
+  "username": "admin",
+  "password": "senha_segura",
+  "internal": true
+}'
 ```
 
-Após a finalização do Deployment, as seguintes partes do sistema estarão disponíveis:
-- Backend: http://localhost/api/swagger-ui/index.html
-- Frontend: http://localhost
-- PgAdmin: http://localhost/pgadmin
-    - Usuário (padrão): postgres@email.com
-    - Senha (padrão): postgres
+Após o sucesso da requisição, você poderá fazer login no [Frontend](http://localhost) com o usuário criado.
 
-> [!WARNING]
-> Para cadastrar usuários no sistema sem a necessidade de estar logado, basta passar o parâmetro `secret-allow-first-user` na header do request de cadastro.
-> Exemplo:
-> ```curl
-> curl -X 'POST' \
->   'http://localhost/api/auth/register' \
->   -H 'accept: */*' \
->   -H 'Authorization: Bearer secret-allow-first-user' \
->   -H 'Content-Type: application/json' \
->   -d '{
->   "username": "teste",
->   "password": "senha",
->   "internal": true
-> }'
-> ```
+> [!TIP]
+> O segredo `secret-allow-first-user` permite o registro de usuários sem a necessidade de estar logado.
 
 ## Arquitetura
 
@@ -101,5 +100,27 @@ graph TD
 - Uso do algoritmo Argon2 ao invés do Bcrypt
     - O Bcrypt foi superado pelo Argon2
 
-- Uso do Nginx como Reverse Proxy -> Obsoleto
-    - Familiaridade com a ferramenta
+- Uso do Nginx como Reverse Proxy
+    - Familiaridade com a ferramenta e centralização de acessos.
+
+## Comandos Úteis (Docker Lifecycle)
+
+### Ver logs
+```bash
+docker-compose logs -f
+```
+
+### Parar containers
+```bash
+docker-compose down
+```
+
+### Limpar dados do banco de dados (Reset Total)
+```bash
+docker-compose down -v
+```
+
+### Rebuild do projeto ao modificar código Java
+```bash
+docker-compose up --build -d api
+```
